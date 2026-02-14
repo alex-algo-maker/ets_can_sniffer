@@ -33,6 +33,7 @@
 #include <mcp_can.h>
 #include <WiFi.h>
 #include <WebServer.h>
+#include <ArduinoOTA.h>
 
 // ============== CONFIGURATION ==============
 
@@ -41,8 +42,14 @@
 
 MCP_CAN CAN(CAN_CS_PIN);
 
-const char* AP_SSID = "ETS_Sniffer";
-const char* AP_PASS = "canbuslog";
+// WiFi network to join (station mode).
+const char* WIFI_SSID = "Hammer";
+const char* WIFI_PASS = "H@mmert!me";
+
+// Static IP configuration.
+IPAddress staticIP(192, 168, 1, 200);
+IPAddress gateway(192, 168, 1, 1);
+IPAddress subnet(255, 255, 255, 0);
 
 typedef enum { BAUD_125K, BAUD_250K, BAUD_500K, BAUD_1M } can_baud_t;
 can_baud_t currentBaud = BAUD_250K;
@@ -626,11 +633,17 @@ void setup() {
     Serial.println("\n\nETS CAN Sniffer - WiFi Version (MCP2515)");
     Serial.println("==========================================");
 
-    WiFi.softAP(AP_SSID, AP_PASS);
-    Serial.print("WiFi AP started: ");
-    Serial.println(AP_SSID);
+    WiFi.mode(WIFI_STA);
+    WiFi.config(staticIP, gateway, subnet);
+    WiFi.begin(WIFI_SSID, WIFI_PASS);
+    Serial.printf("Connecting to WiFi \"%s\"", WIFI_SSID);
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+    }
+    Serial.println(" connected!");
     Serial.print("IP: ");
-    Serial.println(WiFi.softAPIP());
+    Serial.println(WiFi.localIP());
 
     server.on("/", handleRoot);
     server.on("/status", handleStatus);
@@ -644,6 +657,15 @@ void setup() {
     server.begin();
     Serial.println("Web server started on port 80");
 
+    ArduinoOTA.setHostname("ets-sniffer");
+    ArduinoOTA.onStart([]() { Serial.println("OTA update starting..."); });
+    ArduinoOTA.onEnd([]() { Serial.println("\nOTA update complete."); });
+    ArduinoOTA.onError([](ota_error_t error) {
+        Serial.printf("OTA error [%u]\n", error);
+    });
+    ArduinoOTA.begin();
+    Serial.println("OTA enabled (hostname: ets-sniffer)");
+
     if (!initCAN(currentBaud)) {
         Serial.println("FATAL: MCP2515 init failed!");
         while(1) delay(1000);
@@ -651,10 +673,11 @@ void setup() {
     Serial.printf("CAN initialised at %s (MCP2515, 8 MHz crystal)\n", baudToString(currentBaud));
 
     startTime = millis();
-    Serial.println("Ready! Connect to WiFi and browse to http://192.168.4.1");
+    Serial.printf("Ready! Browse to http://%s\n", WiFi.localIP().toString().c_str());
 }
 
 void loop() {
+    ArduinoOTA.handle();
     server.handleClient();
 
     if (digitalRead(CAN_INT_PIN) == LOW) {

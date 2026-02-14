@@ -5,10 +5,14 @@ Connects to the ESP32's web API, polls for new CAN messages, and writes
 them to a timestamped CSV file locally. Runs until Ctrl+C.
 
 Usage:
-    1. Connect your laptop/phone to the "ETS_Sniffer" WiFi network
-    2. Run: python can_logger.py
-    3. Tap helm action buttons on the web UI (http://192.168.4.1)
-    4. Press Ctrl+C to stop -- CSV file is saved automatically
+    python can_logger.py [ESP32_IP]
+
+    ESP32_IP defaults to 192.168.1.200 (static IP on local network).
+    Override if needed:
+        python can_logger.py 192.168.1.42
+
+    Use helm action buttons on the web UI to annotate the log.
+    Press Ctrl+C to stop -- CSV file is saved automatically.
 
 The script deduplicates using sequence numbers from the ESP32, so no
 messages are lost or doubled even with frequent polling.
@@ -23,7 +27,7 @@ from urllib.error import URLError
 from urllib.request import urlopen
 import json
 
-ESP32_IP = "192.168.4.1"
+ESP32_IP = sys.argv[1] if len(sys.argv) > 1 else "192.168.1.200"
 POLL_INTERVAL = 0.2  # seconds between polls
 LOG_URL = f"http://{ESP32_IP}/log"
 STATUS_URL = f"http://{ESP32_IP}/status"
