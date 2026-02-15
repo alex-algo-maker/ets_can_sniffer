@@ -42,14 +42,14 @@
 
 MCP_CAN CAN(CAN_CS_PIN);
 
-// WiFi network to join (station mode).
-const char* WIFI_SSID = "Hammer";
-const char* WIFI_PASS = "H@mmert!me";
+// WiFi and network config loaded from gitignored header.
+// Copy wifi_config.example.h to wifi_config.h and fill in your values.
+#include "wifi_config.h"
 
-// Static IP configuration.
-IPAddress staticIP(192, 168, 1, 200);
-IPAddress gateway(192, 168, 1, 1);
-IPAddress subnet(255, 255, 255, 0);
+IPAddress staticIP(STATIC_IP);
+IPAddress gateway(GATEWAY_IP);
+IPAddress subnet(SUBNET_MASK);
+IPAddress dns(DNS_IP);
 
 typedef enum { BAUD_125K, BAUD_250K, BAUD_500K, BAUD_1M } can_baud_t;
 can_baud_t currentBaud = BAUD_250K;
@@ -634,7 +634,7 @@ void setup() {
     Serial.println("==========================================");
 
     WiFi.mode(WIFI_STA);
-    WiFi.config(staticIP, gateway, subnet);
+    WiFi.config(staticIP, gateway, subnet, dns);
     WiFi.begin(WIFI_SSID, WIFI_PASS);
     Serial.printf("Connecting to WiFi \"%s\"", WIFI_SSID);
     while (WiFi.status() != WL_CONNECTED) {

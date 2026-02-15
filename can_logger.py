@@ -7,9 +7,9 @@ them to a timestamped CSV file locally. Runs until Ctrl+C.
 Usage:
     python can_logger.py [ESP32_IP]
 
-    ESP32_IP defaults to 192.168.1.200 (static IP on local network).
+    ESP32_IP defaults to 192.168.0.200 (static IP on local network).
     Override if needed:
-        python can_logger.py 192.168.1.42
+        python can_logger.py 192.168.0.42
 
     Use helm action buttons on the web UI to annotate the log.
     Press Ctrl+C to stop -- CSV file is saved automatically.
@@ -27,7 +27,7 @@ from urllib.error import URLError
 from urllib.request import urlopen
 import json
 
-ESP32_IP = sys.argv[1] if len(sys.argv) > 1 else "192.168.1.200"
+ESP32_IP = sys.argv[1] if len(sys.argv) > 1 else "192.168.0.200"
 POLL_INTERVAL = 0.2  # seconds between polls
 LOG_URL = f"http://{ESP32_IP}/log"
 STATUS_URL = f"http://{ESP32_IP}/status"
